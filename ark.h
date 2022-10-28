@@ -62,7 +62,6 @@ struct desk
 	desk(windows_parameters& param_,int size_desk_ = 10)
 		:param(param_), x(param_.get_size_hor() / 2 - 1- size_desk_/2), size_desk(size_desk_) {}
 	void draw_desk();
-	void move_desk();
 	void move_desk_with_sensor(int value_sensor, int& cnt);
 	int get_size_desk() const { return size_desk; }
 	int get_coordX() const { return x; }
@@ -93,8 +92,6 @@ struct field
 	field(ball& B_,desk& D_)
 		:B(B_),D(D_),cnt(0) {}
 	void draw_field(const windows_parameters& param);
-	//void move_ball(std::atomic<bool>& state);
-	//void move_desk_with_use_sensor(std::atomic<bool>& state);
 	void move_ball_and_desk(std::atomic<bool>& state);
 	void increment(std::atomic<bool>& state);
 	bool collision_with_field(std::atomic<bool>& state);
@@ -104,6 +101,5 @@ struct field
 	tty_init T;
 private:
 	windows_parameters param;
-	//std::mutex mtx;
 	int cnt;		// this variable for count waiting for quit work thread, now if cnt = 50 (if T request sensor = 5 ms, and T request 30 ms)
 };

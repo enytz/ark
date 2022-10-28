@@ -69,7 +69,6 @@ void tty_init::read_data(std::atomic<bool>& state)
                 perror("Error reading ");
 				state = false;
                 return;
-				//exit(1);
             }
         buf_int = char_to_int(buf);
 		write_log_sensor_data(buf);
@@ -162,44 +161,18 @@ void field::increment(std::atomic<bool>& state)
 	B.x += B.dx;
 	B.y += B.dy;
 }
-/*
-void field::move_ball(std::atomic<bool>& state)
-{
- 	char sym_ball = '*';
-	while (state)
-	{
-		B.set_cursor_position(round(B.x), round(B.y));					
-		addch(' ');
-		increment(state);
-		B.set_cursor_position(round(B.x), round(B.y));
-		addch('*');
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		refresh();
-	}
-}
 
-void field::move_desk_with_use_sensor(std::atomic<bool>& state)
-{	
-	while((cnt !=REPS_FOR_QUIT) && state)
-		{	
-			mtx.lock();
-			D.move_desk_with_sensor(T.get_value_sensor(),cnt);
-			mtx.unlock();
-			std::this_thread::sleep_for(std::chrono::milliseconds(30));
-		}
-	//game_over(state ,param.get_size_hor(),param.get_size_vert());
-	game_over(state);
-}
-*/
 void field::move_ball_and_desk(std::atomic<bool>& state)
 {
 	char sym_ball = '*';
 	while ((cnt !=REPS_FOR_QUIT) && state)
 	{
+		//------ move desk
 		D.move_desk_with_sensor(T.get_value_sensor(),cnt);
 		refresh();
 		std::this_thread::sleep_for(std::chrono::milliseconds(30));
-		B.set_cursor_position(round(B.x), round(B.y));					
+		//------ move ball
+		B.set_cursor_position(round(B.x), round(B.y));				
 		addch(' ');
 		increment(state);
 		B.set_cursor_position(round(B.x), round(B.y));
@@ -231,38 +204,6 @@ void desk::draw_desk()
 	for (int i = 0; i < size_desk;++i)
 	{
 		addch(ACS_CKBOARD);
-	}
-}
-
-void desk::move_desk()
-{
-	char sym{ ' ' };
-	while (sym != 'q')
-	{
-		sym = getch();
-		switch (sym)
-		{
-		case 'a':
-		{
-			--x;
-			draw_desk();
-			break;
-		}
-		case 'd':
-		{
-			++x;
-			draw_desk();
-			break;
-		}
-		case 'q':
-		{
-			endwin();
-			exit(0);
-		}
-		default:
-			break;
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
 

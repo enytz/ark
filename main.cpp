@@ -12,13 +12,10 @@ int main()
 	field_ark.draw_field(param);
 	field_ark.T.set_settings_tty();
 
-	std::thread thread_3 ([&field_ark,&state]() {field_ark.T.read_data(state);});
-	std::thread thread_1 ([&field_ark, &state]() {field_ark.move_ball_and_desk(state);});
-	//std::thread thread_1([&field_ark, &state]() {field_ark.move_desk_with_use_sensor(state);});
-	//std::thread thread_2([&field_ark, &state]() {field_ark.move_ball(state);});
+	std::thread thread_1 ([&field_ark,&state]() {field_ark.T.read_data(state);});
+	std::thread thread_2 ([&field_ark, &state]() {field_ark.move_ball_and_desk(state);});
 
-	thread_3.join();
 	thread_1.join();
-	//thread_2.join();
+	thread_2.join();
  	return 0;
 }
