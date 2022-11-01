@@ -23,7 +23,6 @@ double degtorad(int& angle);
 std::string itos(int val);
 int char_to_int(const char* buf);
 void game_over(std::atomic<bool>& state, int size_hor=S_HOR, int size_vert=S_VERT);
-
 struct windows_parameters
 {
 	windows_parameters()
@@ -65,6 +64,7 @@ struct desk
 	void move_desk_with_sensor(int value_sensor, int& cnt);
 	int get_size_desk() const { return size_desk; }
 	int get_coordX() const { return x; }
+
 private:
 	windows_parameters param;
 	int x;
@@ -77,6 +77,7 @@ struct ball
 	ball(windows_parameters& param_,int angle_ = 30)
 		:param(param_),angle(angle_),x(param.get_size_hor()/2),y(2), speedx(1),speedy(1), dx(speedx* cos(degtorad(angle))),dy(speedy* sin(degtorad(angle))) {}
 	void set_cursor_position(int x, int y);
+	void set_default_pos() {x = param.get_size_hor()/2; y =2;};
 	windows_parameters param;
 	int angle;
 	double x;
@@ -87,15 +88,14 @@ struct ball
 	double dy;
 };
 
-struct field
+struct Game
 {
-	field(ball& B_,desk& D_)
-		:B(B_),D(D_),cnt(0) {}
-	void draw_field(const windows_parameters& param);
+	Game(ball& B_,desk& D_, const windows_parameters& param);
 	void move_ball_and_desk(std::atomic<bool>& state);
 	void increment(std::atomic<bool>& state);
 	bool collision_with_field(std::atomic<bool>& state);
 	void collision_desk_and_ball(std::atomic<bool>& state);
+	bool is_running(std::atomic<bool>& state);
 	ball B;
 	desk D;
 	tty_init T;

@@ -52,7 +52,6 @@ void tty_init::set_settings_tty()
     {
         perror("Error from tcsetattr ");
         return;
-		//exit(1);
     }
 }
 
@@ -71,7 +70,7 @@ void tty_init::read_data(std::atomic<bool>& state)
                 return;
             }
         buf_int = char_to_int(buf);
-		write_log_sensor_data(buf);
+		//write_log_sensor_data(buf);
     }
 };
 
@@ -80,31 +79,34 @@ int tty_init::get_value_sensor() const
 	return buf_int;
 }
 
-void field::draw_field(const windows_parameters& param)
-{
-	initscr();
-	cbreak();
-	noecho();
-	mvaddch(0,0,ACS_BSSB);
-	for (int i=1;i<param.get_size_hor()-1;++i)
+Game::Game(ball& B_,desk& D_, const windows_parameters& param)
+		:B(B_),D(D_),cnt(0) 
 	{
-		addch(ACS_HLINE);
+		//----------------- setting for work curses
+		initscr();
+		cbreak();
+		noecho();
+		//-----------------
+		mvaddch(0,0,ACS_BSSB);
+		for (int i=1;i<param.get_size_hor()-1;++i)
+		{
+			addch(ACS_HLINE);
+		}
+		addch(ACS_BBSS);
+		for (int i=1;i<param.get_size_vert()-1;++i)
+		{
+			mvaddch(i,0,ACS_VLINE);
+			mvaddch(i,param.get_size_hor()-1,ACS_VLINE);
+		}
+		mvaddch(param.get_size_vert()-1,0,ACS_SSBB);
+		for (int i=1;i<param.get_size_hor()-1;++i)
+		{
+			addch(ACS_HLINE);
+		}
+		addch(ACS_SBBS);
 	}
-	addch(ACS_BBSS);
-	for (int i=1;i<param.get_size_vert()-1;++i)
-	{
-		mvaddch(i,0,ACS_VLINE);
-		mvaddch(i,param.get_size_hor()-1,ACS_VLINE);
-	}
-	mvaddch(param.get_size_vert()-1,0,ACS_SSBB);
-	for (int i=1;i<param.get_size_hor()-1;++i)
-	{
-		addch(ACS_HLINE);
-	}
-	addch(ACS_SBBS);
-}
 
-bool field::collision_with_field(std::atomic<bool>& state)
+bool Game::collision_with_field(std::atomic<bool>& state)
 {
 	bool flag = 0;
 	if ((round(B.x) >= param.get_size_hor() - 3) || round(B.x) < 2)
@@ -141,16 +143,15 @@ bool field::collision_with_field(std::atomic<bool>& state)
  	return flag ? 1 : 0;
 }
 
-void field::collision_desk_and_ball(std::atomic<bool>& state)
+void Game::collision_desk_and_ball(std::atomic<bool>& state)
 {
-	//std::lock_guard<std::mutex> lck(mtx);
 	if (!((round(B.x) >= D.get_coordX()) && (round(B.x) <= D.get_coordX() + D.get_size_desk())))
 	{
 		game_over(state);
 	}
 }
 
-void field::increment(std::atomic<bool>& state)
+void Game::increment(std::atomic<bool>& state)
 {
 	if (collision_with_field(state))
 	{
@@ -162,7 +163,7 @@ void field::increment(std::atomic<bool>& state)
 	B.y += B.dy;
 }
 
-void field::move_ball_and_desk(std::atomic<bool>& state)
+void Game::move_ball_and_desk(std::atomic<bool>& state)
 {
 	char sym_ball = '*';
 	while ((cnt !=REPS_FOR_QUIT) && state)
@@ -176,11 +177,39 @@ void field::move_ball_and_desk(std::atomic<bool>& state)
 		addch(' ');
 		increment(state);
 		B.set_cursor_position(round(B.x), round(B.y));
-		addch('*');
+		addch(sym_ball);
 		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		refresh();
 	}
 	game_over(state);
+}
+
+bool Game::is_running(std::atomic<bool>& state)
+{
+	if (!state)
+	{
+		mvprintw(param.get_size_vert()/2, param.get_size_hor()/2-10,"Press \"y\" for new game ");
+		//getch();
+		int answer = getch();
+		if (answer == 121)	// 121 = 'y'
+		{
+			mvprintw(param.get_size_vert()/2, param.get_size_hor()/2-10,"                      ");
+			mvprintw(B.y,B.x,"  ");
+			B.set_default_pos();
+			cnt = 0;				// reset value for case end game on condition cnt > REPS_FOR_QUIT
+			state = true;
+			return true;
+		}
+		else
+		{
+			endwin();
+			echo();
+			clear();
+			return false;
+		}	
+	}
+	else
+		return true;
 }
 
 void desk::draw_desk()
@@ -297,9 +326,9 @@ void game_over(std::atomic<bool>& state, int size_hor, int size_vert)
 	move(size_vert/2,size_hor/2-4);
 	printw("Game over");
 	getch();
-	endwin();
-	echo();
-	clear();
+	//endwin();
+	//echo();
+	//clear();
 	state = false;
 	return;
 }
